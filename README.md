@@ -43,6 +43,25 @@ Most modules default **on** at activation so a typical site is covered without a
 
 ---
 
+## Screenshots
+
+| | |
+|:--:|:--:|
+| ![Protection status dashboard](.wordpress-org/screenshot-1.png) | ![WordPress dashboard card](.wordpress-org/screenshot-2.png) |
+| **1.** Protection status dashboard with active layers and meter | **2.** WordPress admin dashboard card summarizing Shield status |
+| ![Login security](.wordpress-org/screenshot-3.png) | ![Firewall and rate limits](.wordpress-org/screenshot-4.png) |
+| **3.** Login security: lockouts, CAPTCHA, and 2FA options | **4.** Firewall and rate-limit settings with allowlist controls |
+
+<p align="center">
+  <img src=".wordpress-org/screenshot-5.png" alt="Activity and audit log" width="720" />
+  <br />
+  <strong>5.</strong> Activity / audit log of security events
+</p>
+
+These assets also live under [`.wordpress-org/`](.wordpress-org/) for WordPress.org directory use (icons, banners, screenshots).
+
+---
+
 ## Quick install
 
 ### From the latest release (recommended)
