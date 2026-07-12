@@ -1,0 +1,79 @@
+<?php
+/**
+ * Plugin Name: SquidSec Shield Early WAF
+ * Description: Early request inspection before full plugin load. Installed by SquidSec Shield.
+ * Version: 1.0.0
+ * Author: SquidSec
+ *
+ * Must-use drop-in — keep lightweight.
+ *
+ * @package SquidSec_Shield
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Early lightweight pattern block (subset). Full engine runs after plugins_loaded.
+ */
+function squidsec_shield_early_waf() {
+	// Skip CLI.
+	if ( PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg' ) {
+		return;
+	}
+	// Skip if settings say disabled — options may not be loaded; use raw DB only when $wpdb ready.
+	// At muplugins_loaded, $wpdb is available.
+	if ( ! function_exists( 'get_option' ) ) {
+		return;
+	}
+
+	$settings = get_option( 'squidsec_shield_settings', array() );
+	if ( is_array( $settings ) ) {
+		if ( isset( $settings['enabled'] ) && ! $settings['enabled'] ) {
+			return;
+		}
+		if ( isset( $settings['waf_enabled'] ) && ! $settings['waf_enabled'] ) {
+			return;
+		}
+		if ( ! empty( $settings['pentest_mode'] ) ) {
+			return; // Full plugin will log.
+		}
+	}
+
+	$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended
+	$qs = isset( $_SERVER['QUERY_STRING'] ) ? (string) $_SERVER['QUERY_STRING'] : '';
+	$blob = strtolower( $uri . ' ' . $qs );
+
+	// Critical high-confidence patterns only (low FP).
+	$patterns = array(
+		'union select',
+		'union%20select',
+		'../wp-config',
+		'..%2fwp-config',
+		'/etc/passwd',
+		'wp-config.php.bak',
+		'base64_decode(',
+		'<?php',
+		'eval(base64',
+		'file_put_contents(',
+		'shell_exec(',
+		'passthru(',
+		'\x00',
+	);
+
+	// Don't block normal admin logged-in traffic with php tags in post body — only URI/query here.
+	foreach ( $patterns as $p ) {
+		if ( false !== strpos( $blob, $p ) ) {
+			if ( ! headers_sent() ) {
+				header( 'HTTP/1.1 403 Forbidden' );
+				header( 'X-SquidSec-Shield: early-block' );
+				header( 'Content-Type: text/plain; charset=utf-8' );
+			}
+			echo 'Forbidden';
+			exit;
+		}
+	}
+}
+add_action( 'muplugins_loaded', 'squidsec_shield_early_waf', 0 );

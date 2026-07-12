@@ -1,0 +1,128 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-07-12",
+  "license": "GPL-2.0-or-later",
+  "community": true,
+  "rules": [
+    {
+      "id": "waf-sqli-union",
+      "name": "SQL injection — UNION SELECT",
+      "category": "sqli",
+      "type": "regex",
+      "pattern": "(?i)(union\\s+(all\\s+)?select|select\\s+.+(from|information_schema))",
+      "targets": ["all"],
+      "action": "block",
+      "severity": "critical",
+      "cve": "",
+      "enabled": true
+    },
+    {
+      "id": "waf-sqli-comment",
+      "name": "SQL injection — comment/tautology",
+      "category": "sqli",
+      "type": "regex",
+      "pattern": "(?i)(\\bor\\b\\s+1\\s*=\\s*1|and\\s+1\\s*=\\s*1|--\\s|\\/\\*.*\\*\\/|;\\s*(drop|sleep|benchmark)\\b)",
+      "targets": ["all"],
+      "action": "block",
+      "severity": "high",
+      "cve": "",
+      "enabled": true
+    },
+    {
+      "id": "waf-xss-script",
+      "name": "XSS — script tags / event handlers",
+      "category": "xss",
+      "type": "regex",
+      "pattern": "(?i)(<\\s*script|javascript\\s*:|on(error|load|click|mouseover)\\s*=)",
+      "targets": ["front", "rest", "ajax", "login"],
+      "action": "block",
+      "severity": "high",
+      "cve": "",
+      "enabled": true
+    },
+    {
+      "id": "waf-rce-php",
+      "name": "RCE — dangerous PHP functions in request",
+      "category": "rce",
+      "type": "regex",
+      "pattern": "(?i)(shell_exec\\s*\\(|passthru\\s*\\(|system\\s*\\(|proc_open\\s*\\(|popen\\s*\\(|`[^`]+`|\\bexec\\s*\\()",
+      "targets": ["all"],
+      "action": "block",
+      "severity": "critical",
+      "cve": "",
+      "enabled": true
+    },
+    {
+      "id": "waf-rce-eval",
+      "name": "RCE — eval/base64 obfuscation",
+      "category": "rce",
+      "type": "regex",
+      "pattern": "(?i)(eval\\s*\\(\\s*base64_decode|assert\\s*\\(\\s*base64|gzinflate\\s*\\(\\s*base64|str_rot13\\s*\\()",
+      "targets": ["all"],
+      "action": "block",
+      "severity": "critical",
+      "cve": "",
+      "enabled": true
+    },
+    {
+      "id": "waf-lfi-traversal",
+      "name": "LFI — path traversal",
+      "category": "lfi",
+      "type": "regex",
+      "pattern": "(?i)(\\.\\./|\\.\\.\\\\|%2e%2e%2f|%2e%2e/|\\/etc\\/passwd|\\.\\..*wp-config)",
+      "targets": ["all"],
+      "action": "block",
+      "severity": "high",
+      "cve": "",
+      "enabled": true
+    },
+    {
+      "id": "waf-upload-php",
+      "name": "Malicious upload — PHP in multipart name",
+      "category": "upload",
+      "type": "regex",
+      "pattern": "(?i)filename\\s*=\\s*[\"'][^\"']+\\.(php|phtml|phar|php5|php7)[\"']",
+      "targets": ["all"],
+      "action": "block",
+      "severity": "critical",
+      "cve": "",
+      "enabled": true
+    },
+    {
+      "id": "waf-wp-file-manager",
+      "name": "WordPress-aware — suspicious file manager connectors",
+      "category": "rce",
+      "type": "uri_regex",
+      "pattern": "(?i)(wp-file-manager|elfinder|connector\\.minimal\\.php)",
+      "targets": ["all"],
+      "action": "block",
+      "severity": "high",
+      "cve": "",
+      "enabled": true
+    },
+    {
+      "id": "waf-xmlrpc-multicall",
+      "name": "XML-RPC multicall abuse pattern",
+      "category": "rce",
+      "type": "regex",
+      "pattern": "(?i)<methodName>\\s*system\\.multicall\\s*</methodName>",
+      "targets": ["xmlrpc"],
+      "action": "block",
+      "severity": "high",
+      "cve": "",
+      "enabled": true
+    },
+    {
+      "id": "waf-rest-user-probe",
+      "name": "REST user enumeration probe (logged)",
+      "category": "xss",
+      "type": "uri_regex",
+      "pattern": "(?i)/wp-json/wp/v2/users",
+      "targets": ["rest"],
+      "action": "log",
+      "severity": "low",
+      "cve": "",
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-07-12",
+  "source": "SquidSec community vulnerability database (local JSON). Extend freely.",
+  "vulnerabilities": [
+    {
+      "id": "SSS-CORE-OLD",
+      "type": "core",
+      "slug": "wordpress",
+      "component": "WordPress Core",
+      "title": "Outdated WordPress core (example threshold)",
+      "affected": "<5.0.0",
+      "fixed_in": "5.0+",
+      "severity": "critical",
+      "exploitability": "high",
+      "cve": "",
+      "description": "Very old WordPress core versions have numerous known issues.",
+      "recommendation": "Update WordPress to the latest secure release."
+    },
+    {
+      "id": "SSS-TIMTHUMB",
+      "type": "plugin",
+      "slug": "timthumb",
+      "component": "TimThumb (legacy)",
+      "title": "TimThumb arbitrary file upload / RCE lineage",
+      "affected": "*",
+      "fixed_in": "remove",
+      "severity": "critical",
+      "exploitability": "high",
+      "cve": "CVE-2011-4106",
+      "description": "Legacy TimThumb is unsafe and should not exist on modern sites.",
+      "recommendation": "Delete TimThumb completely."
+    },
+    {
+      "id": "SSS-FILE-MANAGER",
+      "type": "plugin",
+      "slug": "wp-file-manager",
+      "component": "File Manager",
+      "title": "File Manager family — high risk if unpatched",
+      "affected": "*",
+      "fixed_in": "latest",
+      "severity": "high",
+      "exploitability": "high",
+      "cve": "CVE-2020-25213",
+      "description": "Historical unauthenticated RCE in File Manager plugin lineage. Treat any install as high scrutiny.",
+      "recommendation": "Remove if unused; otherwise keep strictly updated and restrict access."
+    },
+    {
+      "id": "SSS-REVSLIDER-OLD",
+      "type": "plugin",
+      "slug": "revslider",
+      "component": "Slider Revolution",
+      "title": "Legacy Slider Revolution issues (broad advisory)",
+      "affected": "<6.0.0",
+      "fixed_in": "6.0.0+",
+      "severity": "high",
+      "exploitability": "medium",
+      "cve": "",
+      "description": "Older Slider Revolution versions had critical issues.",
+      "recommendation": "Update to current vendor release."
+    },
+    {
+      "id": "SSS-CONTACT-FORM7-OLD",
+      "type": "plugin",
+      "slug": "contact-form-7",
+      "component": "Contact Form 7",
+      "title": "Very old Contact Form 7",
+      "affected": "<5.0.0",
+      "fixed_in": "5.0+",
+      "severity": "medium",
+      "exploitability": "medium",
+      "cve": "",
+      "description": "Outdated contact form plugins frequently accumulate XSS/file issues.",
+      "recommendation": "Update Contact Form 7."
+    }
+  ]
+}

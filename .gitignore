@@ -1,0 +1,18 @@
+# Build output
+/dist/
+*.zip
+
+# PHPUnit / local tooling
+.phpunit.result.cache
+phpunit.phar
+composer.lock
+/vendor/
+/node_modules/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/

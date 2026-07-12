@@ -1,0 +1,87 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-07-12",
+  "description": "Community virtual patches mapping CVEs/attack patterns to request rules. Version-aware when requires_plugin is set.",
+  "rules": [
+    {
+      "id": "vp-cve-generic-auth-bypass-rest",
+      "name": "Generic unauthenticated privilege REST action abuse",
+      "category": "rce",
+      "type": "regex",
+      "pattern": "(?i)(rest_route=.+(update_option|eval|assert)|/wp-json/.+(file_manager|arbitrary))",
+      "targets": ["rest"],
+      "action": "block",
+      "severity": "critical",
+      "cve": "",
+      "enabled": true,
+      "fix_hint": "Keep WordPress and plugins updated; review REST endpoints."
+    },
+    {
+      "id": "vp-cve-sqli-admin-ajax",
+      "name": "Unauthenticated SQLi via admin-ajax style payloads",
+      "category": "sqli",
+      "type": "regex",
+      "pattern": "(?i)action=.+(union|select|sleep\\(|benchmark\\()",
+      "targets": ["ajax"],
+      "action": "block",
+      "severity": "critical",
+      "cve": "CVE-GENERIC-AJAX-SQLI",
+      "enabled": true,
+      "fix_hint": "Update the affected plugin providing the AJAX action."
+    },
+    {
+      "id": "vp-file-upload-bypass",
+      "name": "Double extension / null-byte upload bypass",
+      "category": "upload",
+      "type": "regex",
+      "pattern": "(?i)(filename\\s*=\\s*[\"'][^\"']+\\.(php|phtml)\\.(jpg|png|gif)|filename\\s*=\\s*[\"'][^\"']+%00\\.)",
+      "targets": ["all"],
+      "action": "block",
+      "severity": "critical",
+      "cve": "CVE-GENERIC-UPLOAD-BYPASS",
+      "enabled": true,
+      "fix_hint": "Ensure upload handlers validate real MIME and extension."
+    },
+    {
+      "id": "vp-yoast-example-idle",
+      "name": "Example version-aware patch (idle unless vulnerable version)",
+      "category": "xss",
+      "type": "regex",
+      "pattern": "(?i)wpseo_.+<script",
+      "targets": ["admin", "ajax"],
+      "action": "block",
+      "severity": "high",
+      "cve": "CVE-EXAMPLE-YOAST",
+      "requires_plugin": "wordpress-seo",
+      "vulnerable_versions": "<1.0.0",
+      "enabled": true,
+      "fix_hint": "This rule stays idle on modern Yoast versions to minimize false positives."
+    },
+    {
+      "id": "vp-theme-file-editor",
+      "name": "Block theme/plugin editor write abuse patterns",
+      "category": "rce",
+      "type": "regex",
+      "pattern": "(?i)(newcontent=.+(eval|base64_decode|shell_exec)|action=edit&theme=.+\\.php)",
+      "targets": ["admin"],
+      "action": "block",
+      "severity": "high",
+      "cve": "",
+      "enabled": true,
+      "fix_hint": "Keep DISALLOW_FILE_EDIT enabled."
+    },
+    {
+      "id": "vp-phpunit-eval-stdin",
+      "name": "Legacy phpunit eval-stdin RCE path",
+      "category": "rce",
+      "type": "uri_regex",
+      "pattern": "(?i)phpunit.*(eval-stdin|Util/PHP)",
+      "targets": ["all"],
+      "action": "block",
+      "severity": "critical",
+      "cve": "CVE-2017-9841",
+      "enabled": true,
+      "fix_hint": "Remove phpunit from production web roots."
+    }
+  ]
+}

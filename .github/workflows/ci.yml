@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Unit + integration tests (WordPress + MySQL)
+  # ---------------------------------------------------------------------------
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, mysqlnd, zip, mbstring, xml, curl
+          coverage: none
+          tools: wp-cli
+
+      - name: Install WordPress
+        run: |
+          WP_DIR="${RUNNER_TEMP}/wordpress"
+          mkdir -p "${WP_DIR}"
+          wp core download --path="${WP_DIR}" --version=6.7.2 --quiet
+          wp config create \
+            --path="${WP_DIR}" \
+            --dbname=wordpress \
+            --dbuser=root \
+            --dbpass=root \
+            --dbhost=127.0.0.1 \
+            --dbprefix=wp_ \
+            --skip-check \
+            --force
+          wp core install \
+            --path="${WP_DIR}" \
+            --url="http://example.test" \
+            --title="SquidShield Test" \
+            --admin_user=admin \
+            --admin_password=admin \
+            --admin_email=admin@example.test \
+            --skip-email
+          PLUGIN_DIR="${WP_DIR}/wp-content/plugins/squidsec-shield"
+          mkdir -p "$(dirname "${PLUGIN_DIR}")"
+          ln -sfn "${GITHUB_WORKSPACE}" "${PLUGIN_DIR}"
+          wp plugin activate squidsec-shield --path="${WP_DIR}"
+          wp plugin list --path="${WP_DIR}"
+
+      - name: Download PHPUnit 9
+        run: |
+          curl -fsSL -o phpunit.phar https://phar.phpunit.de/phpunit-9.6.phar
+          php phpunit.phar --version
+
+      - name: Run PHPUnit suite
+        env:
+          WP_LOAD: ${{ runner.temp }}/wordpress/wp-load.php
+          SQUIDSHIELD_TESTING: '1'
+        run: |
+          test -f "${WP_LOAD}"
+          php phpunit.phar -c phpunit.xml.dist --testdox
+
+  # ---------------------------------------------------------------------------
+  # 2. Build installable zip + publish release (main / tags only)
+  # ---------------------------------------------------------------------------
+  release:
+    name: Release zip
+    needs: test
+    if: >
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install zip
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zip rsync
+
+      - name: Build WordPress plugin zip
+        id: build
+        run: |
+          chmod +x bin/build-release-zip.sh
+          ./bin/build-release-zip.sh | tee /tmp/build-out.txt
+          VERSION="$(grep '^VERSION=' /tmp/build-out.txt | cut -d= -f2-)"
+          ZIP_PATH="$(grep '^ZIP_PATH=' /tmp/build-out.txt | cut -d= -f2-)"
+          ZIP_NAME="$(grep '^ZIP_NAME=' /tmp/build-out.txt | cut -d= -f2-)"
+          {
+            echo "VERSION=${VERSION}"
+            echo "ZIP_PATH=${ZIP_PATH}"
+            echo "ZIP_NAME=${ZIP_NAME}"
+          } >> "${GITHUB_OUTPUT}"
+          test -f "${ZIP_PATH}"
+          echo "Built ${ZIP_NAME} (v${VERSION})"
+
+      - name: Upload zip as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: squidsec-shield-${{ steps.build.outputs.VERSION }}
+          path: ${{ steps.build.outputs.ZIP_PATH }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "name=${GITHUB_REF_NAME}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "name=v${{ steps.build.outputs.VERSION }}" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Publish GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag.outputs.name }}
+          name: SquidShield WP ${{ steps.build.outputs.VERSION }}
+          artifacts: ${{ steps.build.outputs.ZIP_PATH }}
+          artifactContentType: application/zip
+          allowUpdates: true
+          replacesArtifacts: true
+          generateReleaseNotes: true
+          makeLatest: true
+          commit: ${{ github.sha }}
+          omitBodyDuringUpdate: true
+          token: ${{ secrets.GITHUB_TOKEN }}
