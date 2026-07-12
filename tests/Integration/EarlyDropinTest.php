@@ -26,7 +26,10 @@ class EarlyDropinTest extends SquidShield_TestCase {
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$main = (string) file_get_contents( SQUIDSEC_SHIELD_DIR . 'squidsec-shield.php' );
 		$this->assertStringContainsString( 'Plugin Name:', $main );
-		$this->assertStringContainsString( 'SquidShield WP', $main );
+		// WordPress.org forbids "WP" in the plugin name — brand is "SquidShield".
+		$this->assertMatchesRegularExpression( '/Plugin Name:\s*SquidShield\b/', $main );
+		$this->assertStringNotContainsString( 'Plugin Name:       SquidShield WP', $main );
+		$this->assertStringNotContainsString( 'Plugin Name: SquidShield WP', $main );
 	}
 
 	/**
