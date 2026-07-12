@@ -158,13 +158,21 @@ jobs:
           ZIP="${{ steps.build.outputs.ZIP_PATH }}"
           test -f "${ZIP}"
 
-          # Structural check (mirrors Plugin_Upgrader::check_package).
+          # Structural check (mirrors Plugin_Upgrader::check_package + plugin_info).
           TMP="$(mktemp -d)"
           unzip -q "${ZIP}" -d "${TMP}"
           test -f "${TMP}/squidsec-shield/squidsec-shield.php"
-          grep -q 'Plugin Name:' "${TMP}/squidsec-shield/squidsec-shield.php"
+          grep -qE '^\s*\*\s*Plugin Name:' "${TMP}/squidsec-shield/squidsec-shield.php"
           if find "${TMP}" -type f -name '*.zip' | grep -q .; then
             echo "error: nested zip inside package" >&2
+            exit 1
+          fi
+          # Nested Plugin Name headers make Activate point at the wrong file.
+          if find "${TMP}/squidsec-shield" -mindepth 2 -type f -name '*.php' -print0 \
+            | xargs -0 grep -l -E '^\s*\*\s*Plugin Name:' 2>/dev/null | grep -q .; then
+            echo "error: nested Plugin Name header(s) break Activate:" >&2
+            find "${TMP}/squidsec-shield" -mindepth 2 -type f -name '*.php' -print0 \
+              | xargs -0 grep -l -E '^\s*\*\s*Plugin Name:' >&2
             exit 1
           fi
 

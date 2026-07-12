@@ -1,11 +1,13 @@
 <?php
 /**
- * Plugin Name: SquidSec Shield Early WAF
- * Description: Early request inspection before full plugin load. Installed by SquidSec Shield.
- * Version: 1.0.0
- * Author: SquidSec
+ * SquidSec Shield early WAF drop-in (must-use).
  *
- * Must-use drop-in — keep lightweight.
+ * Copied to wp-content/mu-plugins/ on activation. Keep lightweight.
+ *
+ * Do not declare a WordPress plugin header in this file (no Plugin-Name field).
+ * After zip install, plugin_info() scans one subdirectory deep; a nested
+ * plugin header makes Activate target this file and fail with
+ * "The plugin does not have a valid header."
  *
  * @package SquidSec_Shield
  */

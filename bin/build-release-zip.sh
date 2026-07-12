@@ -127,11 +127,13 @@ if find "${TOP[0]}" -type f -name '*.zip' | grep -q .; then
 fi
 
 HEADER_OK=0
+HEADER_FILE=""
 for php in "${TOP[0]}"/*.php; do
   [[ -f "${php}" ]] || continue
   if grep -qE '^\s*\*\s*Plugin Name:' "${php}"; then
     HEADER_OK=1
-    echo "Validated plugin header in: ${TOP_NAME}/$(basename "${php}")"
+    HEADER_FILE="$(basename "${php}")"
+    echo "Validated plugin header in: ${TOP_NAME}/${HEADER_FILE}"
     break
   fi
 done
@@ -139,6 +141,21 @@ done
 if [[ "${HEADER_OK}" -ne 1 ]]; then
   echo "error: no Plugin Name header in top-level PHP files (WordPress will reject this zip)" >&2
   ls -la "${TOP[0]}" >&2
+  exit 1
+fi
+
+# Nested "Plugin Name:" headers break Activate after upload.
+# WP plugin_info() uses get_plugins('/folder') which scans ONE subdirectory deep
+# (e.g. dropins/*.php). It sorts by name and may pick the nested file as the
+# main plugin path; validate_plugin() then fails because get_plugins() (no
+# folder arg) only lists top-level PHP files → "does not have a valid header".
+NESTED_HEADERS="$(
+  find "${TOP[0]}" -mindepth 2 -type f -name '*.php' -print0 \
+    | xargs -0 grep -l -E '^\s*\*\s*Plugin Name:' 2>/dev/null || true
+)"
+if [[ -n "${NESTED_HEADERS}" ]]; then
+  echo "error: nested Plugin Name header(s) will break WordPress Activate:" >&2
+  echo "${NESTED_HEADERS}" >&2
   exit 1
 fi
 
