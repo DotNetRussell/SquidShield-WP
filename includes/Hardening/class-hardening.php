@@ -3,8 +3,15 @@
  * Hardening wizard & runtime hardening.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -150,6 +157,7 @@ class SquidSec_Shield_Hardening {
 			ABSPATH . '.htaccess'     => 0644,
 		);
 		foreach ( $targets as $path => $mode ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- permission hardening requires direct FS probe.
 			if ( file_exists( $path ) && is_writable( $path ) ) {
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod
 				$ok = @chmod( $path, $mode );

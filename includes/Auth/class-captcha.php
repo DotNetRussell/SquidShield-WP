@@ -3,8 +3,15 @@
  * CAPTCHA / Turnstile integration (optional free providers).
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -22,20 +29,27 @@ class SquidSec_Shield_Captcha {
 		if ( 'none' === $provider || ! SquidSec_Shield_Options::get( 'captcha_on_login' ) ) {
 			return;
 		}
-		add_action( 'login_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
+		// Print provider tags on login only (not wp_enqueue_script with remote URLs —
+		// WordPress.org disallows offloaded enqueues).
+		add_action( 'login_footer', array( __CLASS__, 'print_provider_scripts' ), 5 );
 		add_action( 'login_form', array( __CLASS__, 'render' ) );
 		add_filter( 'wp_authenticate_user', array( __CLASS__, 'verify' ), 25, 2 );
 	}
 
 	/**
-	 * Enqueue provider scripts.
+	 * Print CAPTCHA provider scripts on the login screen when enabled.
 	 */
-	public static function enqueue() {
+	public static function print_provider_scripts() {
 		$provider = SquidSec_Shield_Options::get( 'captcha_provider' );
+		$site     = SquidSec_Shield_Options::get( 'captcha_site_key' );
+		if ( ! $site || ! $provider || 'none' === $provider ) {
+			return;
+		}
 		if ( 'recaptcha' === $provider ) {
-			wp_enqueue_script( 'sss-recaptcha', 'https://www.google.com/recaptcha/api.js', array(), null, true );
+			// Required by Google reCAPTCHA v2 when that option is enabled.
+			echo '<script src="' . esc_url( 'https://www.google.com/recaptcha/api.js' ) . '" async defer></script>'; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript
 		} elseif ( 'turnstile' === $provider ) {
-			wp_enqueue_script( 'sss-turnstile', 'https://challenges.cloudflare.com/turnstile/v0/api.js', array(), null, true );
+			echo '<script src="' . esc_url( 'https://challenges.cloudflare.com/turnstile/v0/api.js' ) . '" async defer></script>'; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript
 		}
 	}
 

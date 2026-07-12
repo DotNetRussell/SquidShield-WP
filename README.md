@@ -2,7 +2,7 @@
   <img src="assets/images/squidshield.jpg" alt="SquidShield" width="280" />
 </p>
 
-# SquidShield WP
+# SquidShield
 
 **Automatic WordPress security by [SquidSec](https://squidsec.com)** — firewall, login protection, malware & integrity scanning, hardening, and audit logging.
 

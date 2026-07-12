@@ -3,8 +3,15 @@
  * Audit logging.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -128,6 +135,8 @@ class SquidSec_Shield_Audit_Log {
 	public static function export( $format = 'json', $limit = 1000 ) {
 		$rows = self::query( array( 'limit' => $limit ) );
 		if ( 'csv' === $format ) {
+			// In-memory stream only (not writing to the plugin directory).
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
 			$out = fopen( 'php://temp', 'r+' );
 			if ( $rows ) {
 				fputcsv( $out, array_keys( $rows[0] ) );
@@ -137,6 +146,7 @@ class SquidSec_Shield_Audit_Log {
 			}
 			rewind( $out );
 			$csv = stream_get_contents( $out );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 			fclose( $out );
 			return (string) $csv;
 		}

@@ -6,8 +6,15 @@
  * from site-specific SquidSec plugins (SMTP, Traffic, Popup, etc.).
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -138,7 +145,7 @@ class SquidSec_Shield_Admin {
 		}
 		$logs     = SquidSec_Shield_Audit_Log::query( array( 'limit' => 4 ) );
 		$logo_url = SQUIDSEC_SHIELD_URL . 'assets/images/squidshield-logo.png';
-		$logo_2x  = SQUIDSEC_SHIELD_URL . 'assets/images/squidshield-logo@2x.png';
+		$logo_2x  = SQUIDSEC_SHIELD_URL . 'assets/images/squidshield-logo-2x.png';
 		$open_url = admin_url( 'admin.php?page=' . self::SLUG );
 		$fix_url  = admin_url( 'admin.php?page=squidsec-shield-hardening' );
 		$act_url  = admin_url( 'admin.php?page=squidsec-shield-logs' );
@@ -222,7 +229,7 @@ class SquidSec_Shield_Admin {
 	public static function menu() {
 		add_menu_page(
 			SQUIDSEC_SHIELD_NAME,
-			'SquidShield WP',
+			'SquidShield',
 			'manage_options',
 			self::SLUG,
 			array( __CLASS__, 'page_dashboard' ),
@@ -337,7 +344,7 @@ class SquidSec_Shield_Admin {
 					SquidSec_Shield_Sensitive_Files::scan( true );
 					SquidSec_Shield_Misconfig::run_scan( true );
 				}
-				add_settings_error( 'sss', 'q', is_wp_error( $r ) ? $r->get_error_message() : 'File quarantined under wp-content/squidsec-shield-quarantine/.', is_wp_error( $r ) ? 'error' : 'updated' );
+				add_settings_error( 'sss', 'q', is_wp_error( $r ) ? $r->get_error_message() : 'File quarantined under uploads/squidsec-shield-quarantine/.', is_wp_error( $r ) ? 'error' : 'updated' );
 				break;
 			case 'delete_file':
 				// phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -641,7 +648,7 @@ class SquidSec_Shield_Admin {
 	private static function header( $title, $current, $intro = '' ) {
 		$opts     = SquidSec_Shield_Options::all();
 		$logo_url = SQUIDSEC_SHIELD_URL . 'assets/images/squidshield-logo.png';
-		$logo_2x  = SQUIDSEC_SHIELD_URL . 'assets/images/squidshield-logo@2x.png';
+		$logo_2x  = SQUIDSEC_SHIELD_URL . 'assets/images/squidshield-logo-2x.png';
 		echo '<div class="wrap sss-wrap">';
 		echo '<div class="sss-header">';
 		echo '<div class="sss-header-brand">';
@@ -1076,7 +1083,7 @@ class SquidSec_Shield_Admin {
 		</div>
 		<div class="sss-panel">
 			<h2>Open findings</h2>
-			<p class="sss-help">Review each hit carefully — some matches can be legitimate use of dangerous functions. <strong>Quarantine</strong> moves a file out of the web tree into <code>wp-content/squidsec-shield-quarantine/</code> (does not permanently delete).</p>
+			<p class="sss-help">Review each hit carefully — some matches can be legitimate use of dangerous functions. <strong>Quarantine</strong> moves a file out of the web tree into <code>uploads/squidsec-shield-quarantine/</code> (does not permanently delete).</p>
 			<table class="sss-table">
 				<thead><tr><th>Severity</th><th>Title</th><th>Path</th><th>Line</th><th>Signature</th><th></th></tr></thead>
 				<tbody>
@@ -1257,7 +1264,7 @@ class SquidSec_Shield_Admin {
 		</div>
 		<div class="sss-panel">
 			<h2>Where users set up 2FA</h2>
-			<p>Each user enables TOTP, views backup codes, and can register optional WebAuthn/passkey credential IDs on their <a href="<?php echo esc_url( admin_url( 'profile.php' ) ); ?>">Profile</a> page under “SquidShield WP — Two-Factor Authentication”.</p>
+			<p>Each user enables TOTP, views backup codes, and can register optional WebAuthn/passkey credential IDs on their <a href="<?php echo esc_url( admin_url( 'profile.php' ) ); ?>">Profile</a> page under “SquidShield — Two-Factor Authentication”.</p>
 		</div>
 		<?php
 		self::footer();
@@ -1382,7 +1389,7 @@ class SquidSec_Shield_Admin {
 					<input type="hidden" name="mode" value="delete" />
 					<button class="button">Delete all sensitive files (<?php echo (int) $sens_count; ?>)</button>
 				</form>
-				<form method="post" onsubmit="return confirm('Move all remediable sensitive files into wp-content/squidsec-shield-quarantine/?');">
+				<form method="post" onsubmit="return confirm('Move all remediable sensitive files into uploads/squidsec-shield-quarantine/?');">
 					<?php self::nonce(); ?>
 					<input type="hidden" name="sss_action" value="remediate_all_sensitive" />
 					<input type="hidden" name="mode" value="quarantine" />
@@ -1394,7 +1401,7 @@ class SquidSec_Shield_Admin {
 
 		<div class="sss-panel">
 			<h2>Sensitive files on disk</h2>
-			<p class="sss-help">Config backups, <code>.env</code>, <code>debug.log</code>, and similar files should not sit in the web root. Use <strong>Delete</strong> to remove permanently, or <strong>Quarantine</strong> to move them to <code>wp-content/squidsec-shield-quarantine/</code> (recoverable by an admin with filesystem access).</p>
+			<p class="sss-help">Config backups, <code>.env</code>, <code>debug.log</code>, and similar files should not sit in the web root. Use <strong>Delete</strong> to remove permanently, or <strong>Quarantine</strong> to move them to <code>uploads/squidsec-shield-quarantine/</code> (recoverable by an admin with filesystem access).</p>
 			<?php if ( empty( $sens_files ) ) : ?>
 				<p class="sss-muted">None detected. Run a rescan if you have not yet.</p>
 			<?php else : ?>

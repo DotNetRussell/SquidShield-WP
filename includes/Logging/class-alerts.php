@@ -3,8 +3,15 @@
  * Alerts & notifications.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -37,7 +44,7 @@ class SquidSec_Shield_Alerts {
 		}
 		set_transient( $key, 1, 10 * MINUTE_IN_SECONDS );
 
-		$subject = sprintf( '[SquidShield WP] %s: %s', strtoupper( $severity ), $type );
+		$subject = sprintf( '[SquidShield] %s: %s', strtoupper( $severity ), $type );
 		$body    = $message . "\n\n" . wp_json_encode( $context, JSON_PRETTY_PRINT );
 		$body   .= "\n\nSite: " . home_url() . "\nIP: " . SquidSec_Shield_IP::client();
 
@@ -100,7 +107,7 @@ class SquidSec_Shield_Alerts {
 		if ( ! $email || ! is_email( $email ) ) {
 			return;
 		}
-		$subject = sprintf( '[SquidShield WP] Daily report — threat level: %s', $threat );
+		$subject = sprintf( '[SquidShield] Daily report — threat level: %s', $threat );
 		$body    = "24h event counts:\n";
 		foreach ( $counts as $sev => $c ) {
 			$body .= sprintf( "  %s: %d\n", $sev, $c );

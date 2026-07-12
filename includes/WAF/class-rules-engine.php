@@ -3,8 +3,15 @@
  * WAF / virtual patch rules engine.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -60,8 +67,11 @@ class SquidSec_Shield_Rules_Engine {
 		if ( SquidSec_Shield_Options::get( 'custom_rules_enabled' ) ) {
 			global $wpdb;
 			$table = SquidSec_Shield_Database::table( 'rules_custom' );
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$rows = $wpdb->get_results( "SELECT * FROM {$table} WHERE enabled = 1 AND sandbox_ok = 1", ARRAY_A );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$rows = $wpdb->get_results(
+				'SELECT * FROM `' . esc_sql( $table ) . '` WHERE enabled = 1 AND sandbox_ok = 1',
+				ARRAY_A
+			);
 			if ( $rows ) {
 				foreach ( $rows as $row ) {
 					$rules[] = array(

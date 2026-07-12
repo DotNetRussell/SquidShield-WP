@@ -3,6 +3,14 @@
  * Uninstall SquidSec Shield.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
@@ -11,7 +19,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 global $wpdb;
 
-$tables = array(
+$squidsec_shield_tables = array(
 	$wpdb->prefix . 'squidsec_shield_logs',
 	$wpdb->prefix . 'squidsec_shield_blocks',
 	$wpdb->prefix . 'squidsec_shield_scans',
@@ -22,12 +30,13 @@ $tables = array(
 	$wpdb->prefix . 'squidsec_shield_rate',
 );
 
-foreach ( $tables as $table ) {
-	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-	$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+foreach ( $squidsec_shield_tables as $squidsec_shield_table ) {
+	// Table names are built from $wpdb->prefix + fixed suffix (no user input).
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$wpdb->query( 'DROP TABLE IF EXISTS `' . esc_sql( $squidsec_shield_table ) . '`' );
 }
 
-$options = array(
+$squidsec_shield_options = array(
 	'squidsec_shield_settings',
 	'squidsec_shield_hardening',
 	'squidsec_shield_db_version',
@@ -41,16 +50,22 @@ $options = array(
 	'squidsec_shield_activated',
 );
 
-foreach ( $options as $opt ) {
-	delete_option( $opt );
+foreach ( $squidsec_shield_options as $squidsec_shield_opt ) {
+	delete_option( $squidsec_shield_opt );
 }
 
-// Remove 2FA user meta.
-$wpdb->query( "DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE 'squidsec_shield_%'" );
+// Remove 2FA and other plugin user meta.
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+$wpdb->query(
+	$wpdb->prepare(
+		"DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s",
+		$wpdb->esc_like( 'squidsec_shield_' ) . '%'
+	)
+);
 
 // Remove early WAF mu-plugin if we installed it.
-$mu = WPMU_PLUGIN_DIR . '/squidsec-shield-early.php';
-if ( file_exists( $mu ) ) {
+$squidsec_shield_mu = WPMU_PLUGIN_DIR . '/squidsec-shield-early.php';
+if ( file_exists( $squidsec_shield_mu ) ) {
 	// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
-	@unlink( $mu );
+	@unlink( $squidsec_shield_mu );
 }

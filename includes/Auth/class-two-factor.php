@@ -5,8 +5,15 @@
  * Pure PHP TOTP (RFC 6238) — no commercial dependencies.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -259,7 +266,7 @@ class SquidSec_Shield_Two_Factor {
 			$creds = array();
 		}
 		?>
-		<h2><?php esc_html_e( 'SquidShield WP — Two-Factor Authentication', 'squidsec-shield' ); ?></h2>
+		<h2><?php esc_html_e( 'SquidShield — Two-Factor Authentication', 'squidsec-shield' ); ?></h2>
 		<table class="form-table" role="presentation">
 			<tr>
 				<th><?php esc_html_e( 'TOTP (Authenticator app)', 'squidsec-shield' ); ?></th>
@@ -382,7 +389,7 @@ class SquidSec_Shield_Two_Factor {
 				echo '<div class="notice notice-warning"><p>';
 				echo esc_html( sprintf(
 					/* translators: %s: date */
-					__( 'SquidShield WP: Please enable two-factor authentication before %s.', 'squidsec-shield' ),
+					__( 'SquidShield: Please enable two-factor authentication before %s.', 'squidsec-shield' ),
 					gmdate( 'Y-m-d', (int) $grace )
 				) );
 				echo ' <a href="' . esc_url( admin_url( 'profile.php' ) ) . '">' . esc_html__( 'Set up now', 'squidsec-shield' ) . '</a></p></div>';

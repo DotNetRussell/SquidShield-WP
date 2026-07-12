@@ -5,8 +5,15 @@
  * Goal: activate the plugin → site is protected. Power users can tweak later.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -86,7 +93,7 @@ class SquidSec_Shield_Setup {
 		SquidSec_Shield_Audit_Log::write(
 			'setup_secure_default',
 			'info',
-			'SquidShield WP activated with automatic protection (profile: ' . $profile . ').'
+			'SquidShield activated with automatic protection (profile: ' . $profile . ').'
 		);
 	}
 

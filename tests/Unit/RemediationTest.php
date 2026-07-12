@@ -50,7 +50,8 @@ class RemediationTest extends SquidShield_TestCase {
 		$r    = SquidSec_Shield_Remediation::quarantine( $rel, true );
 		$this->assertTrue( $r );
 		$this->assertFileDoesNotExist( $full );
-		$qdir = WP_CONTENT_DIR . '/squidsec-shield-quarantine';
+		$upload = wp_upload_dir();
+		$qdir   = trailingslashit( $upload['basedir'] ) . 'squidsec-shield-quarantine';
 		$this->assertDirectoryExists( $qdir );
 	}
 }

@@ -3,8 +3,15 @@
  * Shared helpers.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -20,7 +27,8 @@ class SquidSec_Shield_Helpers {
 	 * @return string
 	 */
 	public static function request_uri() {
-		$uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '/';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only request metadata.
+		$uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
 		return (string) $uri;
 	}
 
@@ -30,7 +38,8 @@ class SquidSec_Shield_Helpers {
 	 * @return string
 	 */
 	public static function request_method() {
-		return isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( (string) wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : 'GET';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only request metadata.
+		return isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) : 'GET';
 	}
 
 	/**

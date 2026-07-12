@@ -3,8 +3,15 @@
  * Sensitive file exposure detection & protection.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -58,7 +65,7 @@ class SquidSec_Shield_Sensitive_Files {
 	 */
 	public static function block_request() {
 		$uri  = SquidSec_Shield_Helpers::request_uri();
-		$path = (string) parse_url( $uri, PHP_URL_PATH );
+		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
 		$base = basename( $path );
 		$deny = array(
 			'wp-config.php',

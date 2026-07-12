@@ -3,8 +3,15 @@
  * WordPress-aware WAF.
  *
  * @package SquidSec_Shield
+ * @author            SquidSec
+ * @copyright         2026 SquidSec
+ * @license           GPL-2.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -171,15 +178,15 @@ class SquidSec_Shield_WAF {
 			}
 		}
 
-		$ref = $cve ? esc_html( $cve ) : esc_html( $rule_id );
-		echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Request Blocked</title>';
+		$ref = $cve ? (string) $cve : (string) $rule_id;
+		echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' . esc_html__( 'Request Blocked', 'squidsec-shield' ) . '</title>';
 		echo '<style>body{font-family:system-ui,sans-serif;background:#0b1220;color:#e8eefc;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}';
 		echo '.box{max-width:480px;padding:32px;border:1px solid #243049;border-radius:12px;background:#121a2b;text-align:center}';
 		echo 'h1{font-size:1.25rem;margin:0 0 12px;color:#7dd3fc}p{color:#94a3b8;line-height:1.5;margin:0 0 8px}';
 		echo '.ref{font-size:12px;color:#64748b;margin-top:16px}</style></head><body><div class="box">';
-		echo '<h1>SquidShield WP</h1>';
-		echo '<p>Your request was blocked by the site security policy.</p>';
-		echo '<p class="ref">Ref: ' . $ref . '</p>';
+		echo '<h1>' . esc_html__( 'SquidShield', 'squidsec-shield' ) . '</h1>';
+		echo '<p>' . esc_html__( 'Your request was blocked by the site security policy.', 'squidsec-shield' ) . '</p>';
+		echo '<p class="ref">' . esc_html( sprintf( /* translators: %s: rule or CVE id */ __( 'Ref: %s', 'squidsec-shield' ), $ref ) ) . '</p>';
 		echo '</div></body></html>';
 		exit;
 	}

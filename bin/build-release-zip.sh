@@ -51,6 +51,7 @@ mkdir -p "${STAGE_DIR}"
 rsync -a \
   --exclude='.git/' \
   --exclude='.github/' \
+  --exclude='.wordpress-org/' \
   --exclude='.gitignore' \
   --exclude='.gitattributes' \
   --exclude='.editorconfig' \
@@ -66,6 +67,7 @@ rsync -a \
   --exclude='.phpunit.result.cache' \
   --exclude='*.zip' \
   --exclude='*:Zone.Identifier' \
+  --exclude='README.md' \
   ./ "${STAGE_DIR}/"
 
 # Guard against accidental self-nesting (rsync footgun if excludes fail).
