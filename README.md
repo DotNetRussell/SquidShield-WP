@@ -23,9 +23,18 @@
 ### From the latest release (recommended)
 
 1. Open the **[latest release](https://github.com/DotNetRussell/SquidShield-WP/releases/latest)**.
-2. Download **`squidsec-shield-x.y.z.zip`** (not the source code archive).
+2. Under **Assets**, download **`squidsec-shield-x.y.z.zip`**.
 3. In WordPress: **Plugins → Add New → Upload Plugin**.
-4. Choose the zip → **Install Now → Activate**.
+4. Choose that zip → **Install Now → Activate**.
+
+**Important:** Use the asset named `squidsec-shield-x.y.z.zip` only.
+
+| Do download | Do not upload to WordPress |
+|-------------|----------------------------|
+| Release asset `squidsec-shield-1.0.0.zip` | **Source code** (zip/tar.gz) from the release page |
+| Local build from `./bin/build-release-zip.sh` | A GitHub Actions artifact that still contains a nested `.zip` inside |
+
+Uploading a nested zip or the raw source archive is the usual cause of *“The plugin does not have a valid header.”*
 
 That's it. Protective modules default **on** so a typical site is covered without opening Settings first.
 
@@ -94,7 +103,8 @@ After install, look for **SquidShield** in the WordPress admin menu and the main
 | Tag `v*` | Same as main: tests + zip + GitHub Release for that tag |
 
 - **Workflow:** [.github/workflows/ci.yml](.github/workflows/ci.yml)
-- **Installable zip:** [Releases](https://github.com/DotNetRussell/SquidShield-WP/releases/latest) (prefer this over “Source code” zips — those include tests and omit the correct plugin folder layout)
+- **Installable zip:** [Releases → Assets → `squidsec-shield-x.y.z.zip`](https://github.com/DotNetRussell/SquidShield-WP/releases/latest) (not “Source code”; not a nested Actions artifact zip)
+- **CI gate:** every release job installs and activates the built zip in a fresh WordPress before publishing
 - **Version source:** `Version:` header in `squidsec-shield.php` (currently **1.0.0**)
 
 When you cut a new version:

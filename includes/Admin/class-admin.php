@@ -76,14 +76,12 @@ class SquidSec_Shield_Admin {
 	 * @param string $hook Hook.
 	 */
 	public static function assets( $hook ) {
-		// Load CSS on every admin screen so the custom menu icon is sized consistently
-		// (not only on Shield pages / the main Dashboard widget).
-		if ( ! current_user_can( 'manage_options' ) ) {
+		$on_plugin = ( false !== strpos( (string) $hook, self::SLUG ) || false !== strpos( (string) $hook, 'squidsec-shield' ) );
+		$on_dash   = ( 'index.php' === $hook );
+		if ( ! $on_plugin && ! $on_dash ) {
 			return;
 		}
 		wp_enqueue_style( 'squidsec-shield-admin', SQUIDSEC_SHIELD_URL . 'assets/css/admin.css', array(), SQUIDSEC_SHIELD_VERSION );
-
-		$on_plugin = ( false !== strpos( (string) $hook, self::SLUG ) || false !== strpos( (string) $hook, 'squidsec-shield' ) );
 		if ( $on_plugin ) {
 			wp_enqueue_script( 'squidsec-shield-admin', SQUIDSEC_SHIELD_URL . 'assets/js/admin.js', array( 'jquery' ), SQUIDSEC_SHIELD_VERSION, true );
 		}
@@ -228,7 +226,7 @@ class SquidSec_Shield_Admin {
 			'manage_options',
 			self::SLUG,
 			array( __CLASS__, 'page_dashboard' ),
-			SQUIDSEC_SHIELD_URL . 'assets/images/squidshield-icon-128.jpg',
+			'dashicons-shield',
 			2 // Above the site tools menu (position 3).
 		);
 

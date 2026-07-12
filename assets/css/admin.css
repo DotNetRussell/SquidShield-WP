@@ -1,19 +1,4 @@
 /* SquidSec Shield admin */
-
-/* Top-level menu: custom brand icon (URL passed to add_menu_page). */
-#adminmenu #toplevel_page_squidsec-shield .wp-menu-image img {
-  width: 20px;
-  height: 20px;
-  padding: 6px 0 0;
-  object-fit: contain;
-  border-radius: 3px;
-}
-#adminmenu #toplevel_page_squidsec-shield:hover .wp-menu-image img,
-#adminmenu #toplevel_page_squidsec-shield.wp-has-current-submenu .wp-menu-image img,
-#adminmenu #toplevel_page_squidsec-shield.current .wp-menu-image img {
-  opacity: 1;
-}
-
 .sss-wrap { max-width: 1200px; }
 
 .sss-header {

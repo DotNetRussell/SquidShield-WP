@@ -102,12 +102,34 @@ jobs:
     permissions:
       contents: write
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install zip
         run: sudo apt-get update -qq && sudo apt-get install -y -qq zip rsync
+
+      - name: Setup PHP + WP-CLI
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, mysqlnd, zip, mbstring, xml, curl
+          coverage: none
+          tools: wp-cli
 
       - name: Build WordPress plugin zip
         id: build
@@ -117,19 +139,68 @@ jobs:
           VERSION="$(grep '^VERSION=' /tmp/build-out.txt | cut -d= -f2-)"
           ZIP_PATH="$(grep '^ZIP_PATH=' /tmp/build-out.txt | cut -d= -f2-)"
           ZIP_NAME="$(grep '^ZIP_NAME=' /tmp/build-out.txt | cut -d= -f2-)"
+          STAGE_DIR="$(grep '^STAGE_DIR=' /tmp/build-out.txt | cut -d= -f2-)"
           {
             echo "VERSION=${VERSION}"
             echo "ZIP_PATH=${ZIP_PATH}"
             echo "ZIP_NAME=${ZIP_NAME}"
+            echo "STAGE_DIR=${STAGE_DIR}"
           } >> "${GITHUB_OUTPUT}"
           test -f "${ZIP_PATH}"
+          test -f "${STAGE_DIR}/squidsec-shield.php"
           echo "Built ${ZIP_NAME} (v${VERSION})"
 
-      - name: Upload zip as workflow artifact
+      # Install the exact zip that will be attached to the GitHub Release.
+      # This fails the job if WordPress would report "plugin does not have a valid header".
+      - name: Install & activate built zip in WordPress
+        run: |
+          set -euo pipefail
+          ZIP="${{ steps.build.outputs.ZIP_PATH }}"
+          test -f "${ZIP}"
+
+          # Structural check (mirrors Plugin_Upgrader::check_package).
+          TMP="$(mktemp -d)"
+          unzip -q "${ZIP}" -d "${TMP}"
+          test -f "${TMP}/squidsec-shield/squidsec-shield.php"
+          grep -q 'Plugin Name:' "${TMP}/squidsec-shield/squidsec-shield.php"
+          if find "${TMP}" -type f -name '*.zip' | grep -q .; then
+            echo "error: nested zip inside package" >&2
+            exit 1
+          fi
+
+          WP_DIR="${RUNNER_TEMP}/wordpress-release"
+          mkdir -p "${WP_DIR}"
+          wp core download --path="${WP_DIR}" --version=6.7.2 --quiet
+          wp config create \
+            --path="${WP_DIR}" \
+            --dbname=wordpress \
+            --dbuser=root \
+            --dbpass=root \
+            --dbhost=127.0.0.1 \
+            --dbprefix=wp_rel_ \
+            --skip-check \
+            --force
+          wp core install \
+            --path="${WP_DIR}" \
+            --url="http://example.test" \
+            --title="SquidShield Release Check" \
+            --admin_user=admin \
+            --admin_password=admin \
+            --admin_email=admin@example.test \
+            --skip-email
+          wp plugin install "${ZIP}" --activate --path="${WP_DIR}"
+          wp plugin is-active squidsec-shield --path="${WP_DIR}"
+          wp plugin get squidsec-shield --path="${WP_DIR}" --field=name
+          wp plugin list --path="${WP_DIR}"
+
+      # Upload the plugin *folder*, not the .zip file.
+      # GitHub always wraps artifacts in an outer zip; if the artifact content is
+      # already a .zip, admins get a nested zip and WP reports "no valid header".
+      - name: Upload installable plugin as workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: squidsec-shield-${{ steps.build.outputs.VERSION }}
-          path: ${{ steps.build.outputs.ZIP_PATH }}
+          path: ${{ steps.build.outputs.STAGE_DIR }}
           if-no-files-found: error
           retention-days: 90
 
