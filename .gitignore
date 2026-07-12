@@ -12,6 +12,7 @@ composer.lock
 # OS / editor noise
 .DS_Store
 Thumbs.db
+*:Zone.Identifier
 *.swp
 *.swo
 .idea/

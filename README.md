@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/images/squidshield.jpg" alt="SquidShield" width="280" />
+</p>
+
 # SquidShield WP
 
 **Automatic WordPress security by [SquidSec](https://squidsec.com)** — firewall, login protection, malware & integrity scanning, hardening, and audit logging.
@@ -68,7 +72,9 @@ Most features register on activation and honor their own settings. Defaults favo
 squidsec-shield/
 ├── squidsec-shield.php    # Bootstrap & plugin headers
 ├── includes/              # Modules (WAF, Auth, Malware, Hardening, …)
-├── assets/                # Admin CSS / JS / images
+├── assets/
+│   ├── css/ js/           # Admin UI
+│   └── images/            # Brand logo, admin icons
 ├── data/                  # Rules, signatures, vuln data
 ├── dropins/               # Early-load WAF drop-in
 ├── languages/             # Translations
