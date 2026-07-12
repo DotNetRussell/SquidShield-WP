@@ -18,6 +18,31 @@
 
 ---
 
+## Features
+
+| Area | What it does | Replaces |
+|------|----------------|----------|
+| **One-click secure defaults** | Activate once and the full protection profile turns on (WooCommerce-aware when needed). First-run scans, FIM baseline, and safe auto-clean start in the background. | Multi-plugin “security suite” setup wizards and long first-run tours. |
+| **Brute-force lockouts** | Failed-login tracking per IP (and optional username), temporary lockouts, audit log events. | fail2ban-style WP login blockers, Limit Login Attempts, “ban after N fails” plugins. |
+| **Login CAPTCHA** | Optional reCAPTCHA v2 or Turnstile on `wp-login.php`. Imports existing SquidSec / Login No Captcha keys when present. | Standalone login reCAPTCHA / Turnstile plugins (incl. older SquidSec login-recaptcha). |
+| **Login hardening + 2FA** | Generic login errors (no username oracle). Optional custom login slug. TOTP 2FA with backup codes and role enforcement / grace period. | Hide-login-errors tweaks, rename-login plugins, basic 2FA plugins. |
+| **User enumeration** | Blocks REST, author archives, `?author=` probes, oEmbed author leaks, and user sitemaps that list account names. | Anti-enumeration plugins and one-off mu-plugin snippets. |
+| **XML-RPC** | Full disable, or pingbacks-only hardening if something still needs XML-RPC. | XML-RPC kill plugins and custom `xmlrpc.php` blocks. |
+| **WAF + virtual patches** | Blocks SQLi, XSS, RCE, LFI, and bad uploads. Version-aware virtual patches for known plugin CVEs. Custom rules supported. | Lightweight WAF plugins and hand-written request-filter snippets. |
+| **Rate limits + IP lists** | Rate limits on login, admin-ajax, REST, and XML-RPC. Allowlist / blocklist CIDRs. Optional geo-block (off by default). | Request rate-limit plugins, IP ban plugins, basic geo-block tools. |
+| **Malware + FIM** | Signature malware scans (plugins, themes, mu-plugins, uploads) on a schedule. File integrity baselines and hourly change checks. Quarantine / delete helpers from the UI. | Standalone malware scanners and basic file-change monitors. |
+| **Vulns + misconfig** | Plugin risk scoring against bundled vuln data. Misconfiguration checks (file editor, debug flags, and similar). | Entry-level vulnerability scanners and security audit checklists. |
+| **Sensitive files + uploads** | Finds and can quarantine junk like config backups and dumps. Blocks direct hits on sensitive paths. Best-effort PHP-in-uploads hardening via `.htaccess`. | Sensitive-file scanners and uploads hardening snippets. |
+| **Fingerprint cleanup** | Automatically deletes public readme, license, and changelog fingerprint files from core, plugins, and themes. Runs on Shield install, after plugin/theme/core updates, on plugin activate, and after theme switch so new packages cannot re-leak versions. | Manual “delete readme.html” cleanups and one-shot fingerprint plugins that do not re-run on updates. |
+| **Admin hardening** | Disables theme/plugin file editor, strips WP version noise / generator tags, security headers, restricts application passwords for non-admins. Optional open-registration block. | Hardening mu-plugins and security-header plugins. |
+| **Anomaly detection** | Watches for odd request patterns beyond single WAF signatures. | Bolt-on anomaly / behavior modules in heavier suites. |
+| **Alerts + daily report** | Email, webhook, and Slack alerts on security events. Optional daily digest. Full audit log (logins, plugin/theme changes, blocks). | Separate alert/log plugins glued onto a security stack. |
+| **Visibility + API** | Plain-language protection dashboard, WordPress admin dashboard card, REST API for operators, pentest mode (log only, do not block) when you are testing. | Opaque “security suite” dashboards and ad-hoc operator APIs. |
+
+Most modules default **on** at activation so a typical site is covered without a setup tour.
+
+---
+
 ## Quick install
 
 ### From the latest release (recommended)
@@ -47,21 +72,6 @@ chmod +x bin/build-release-zip.sh
 ./bin/build-release-zip.sh
 # Upload dist/squidsec-shield-<version>.zip in WP Admin
 ```
-
----
-
-## What it does
-
-| Area | Capabilities |
-|------|----------------|
-| **Web Application Firewall** | Blocks common SQLi, XSS, RCE, LFI, and malicious upload patterns; virtual patches; rate limiting |
-| **Login & auth** | Brute-force lockouts, hide login errors, optional CAPTCHA/Turnstile, TOTP 2FA, user enumeration prevention |
-| **Malware & integrity** | Signature scanning, file integrity monitoring (FIM), safe remediation helpers |
-| **Hardening** | Disable file editor, hide WP version, security headers, sensitive-file protection, fingerprint cleanup |
-| **Vulnerabilities** | Plugin risk scoring and vulnerability checks against bundled data |
-| **Visibility** | Audit log, alerts (email / webhooks / Slack), REST API, dashboard widget |
-
-Most features register on activation and honor their own settings. Defaults favor protection for average sites.
 
 ---
 
