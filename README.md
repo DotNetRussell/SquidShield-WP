@@ -6,9 +6,9 @@
 
 [![Build](https://github.com/DotNetRussell/SquidShield-WP/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DotNetRussell/SquidShield-WP/actions/workflows/ci.yml)
 [![Unit tests](https://img.shields.io/github/actions/workflow/status/DotNetRussell/SquidShield-WP/ci.yml?branch=main&label=unit%20tests&logo=github)](https://github.com/DotNetRussell/SquidShield-WP/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/DotNetRussell/SquidShield-WP?label=release&logo=github)](https://github.com/DotNetRussell/SquidShield-WP/releases/latest)
-[![Download zip](https://img.shields.io/github/v/release/DotNetRussell/SquidShield-WP?label=download%20plugin%20zip&color=2ea44f)](https://github.com/DotNetRussell/SquidShield-WP/releases/latest)
-[![License](https://img.shields.io/github/license/DotNetRussell/SquidShield-WP)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/DotNetRussell/SquidShield-WP.svg?logo=github&label=release)](https://github.com/DotNetRussell/SquidShield-WP/releases/latest)
+[![Download plugin zip](https://img.shields.io/badge/plugin%20zip-download-2ea44f.svg?logo=github&logoColor=white)](https://github.com/DotNetRussell/SquidShield-WP/releases/latest)
+[![License](https://img.shields.io/github/license/DotNetRussell/SquidShield-WP.svg)](LICENSE)
 [![Requires PHP](https://img.shields.io/badge/PHP-%E2%89%A5%207.4-777BB4?logo=php&logoColor=white)](https://www.php.net/)
 [![Requires WordPress](https://img.shields.io/badge/WordPress-%E2%89%A5%205.8-21759B?logo=wordpress&logoColor=white)](https://wordpress.org/)
 
