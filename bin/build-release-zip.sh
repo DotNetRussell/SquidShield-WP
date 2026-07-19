@@ -67,6 +67,9 @@ rsync -a \
   --exclude='.phpunit.result.cache' \
   --exclude='*.zip' \
   --exclude='*:Zone.Identifier' \
+  --exclude='*.bak' \
+  --exclude='*.bak.*' \
+  --exclude='*~' \
   --exclude='README.md' \
   ./ "${STAGE_DIR}/"
 
