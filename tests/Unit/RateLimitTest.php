@@ -13,16 +13,19 @@ class RateLimitTest extends SquidShield_TestCase {
 	public function test_limit_for_contexts() {
 		$this->set_settings(
 			array(
-				'rate_limit_ajax'   => 120,
-				'rate_limit_rest'   => 90,
-				'rate_limit_login'  => 10,
-				'rate_limit_xmlrpc' => 20,
+				'rate_limit_ajax'    => 120,
+				'rate_limit_rest'    => 90,
+				'rate_limit_login'   => 10,
+				'rate_limit_xmlrpc'  => 20,
+				'rate_limit_admin'   => 60,
+				'rate_limit_general' => 0,
 			)
 		);
 		$this->assertSame( 120, SquidSec_Shield_Rate_Limit::limit_for( 'ajax' ) );
 		$this->assertSame( 90, SquidSec_Shield_Rate_Limit::limit_for( 'rest' ) );
 		$this->assertSame( 10, SquidSec_Shield_Rate_Limit::limit_for( 'login' ) );
 		$this->assertSame( 20, SquidSec_Shield_Rate_Limit::limit_for( 'xmlrpc' ) );
+		$this->assertSame( 60, SquidSec_Shield_Rate_Limit::limit_for( 'admin' ) );
 		$this->assertSame( 0, SquidSec_Shield_Rate_Limit::limit_for( 'front' ) );
 	}
 

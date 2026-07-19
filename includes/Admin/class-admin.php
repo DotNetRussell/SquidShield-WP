@@ -460,6 +460,8 @@ class SquidSec_Shield_Admin {
 			'hardening_disable_reg', 'hardening_remove_wp_gen', 'hardening_disable_app_pass_nonadmin',
 			'remove_readme_license', 'sensitive_file_protect', 'anomaly_detection', 'log_blocked_payloads',
 			'async_scans', 'custom_rules_enabled', 'daily_report',
+			// New hardening options
+			'bad_user_agents_enabled', 'probe_patterns_enabled', 'admin_ip_protection',
 		);
 		$out = array();
 
@@ -481,7 +483,7 @@ class SquidSec_Shield_Admin {
 				continue;
 			}
 			$val = $raw[ $key ];
-			if ( in_array( $key, array( 'ip_blocklist', 'ip_allowlist', 'geo_block_countries', 'totp_enforce_roles' ), true ) ) {
+			if ( in_array( $key, array( 'ip_blocklist', 'ip_allowlist', 'geo_block_countries', 'totp_enforce_roles', 'admin_ip_allowlist' ), true ) ) {
 				if ( is_string( $val ) ) {
 					$parts       = preg_split( '/[\s,]+/', $val );
 					$out[ $key ] = array_values( array_filter( array_map( 'trim', $parts ) ) );
@@ -492,6 +494,9 @@ class SquidSec_Shield_Admin {
 			}
 			if ( is_int( $default ) ) {
 				$out[ $key ] = (int) $val;
+			} elseif ( 'bad_user_agents' === $key ) {
+				// Multiline UA list — preserve newlines.
+				$out[ $key ] = sanitize_textarea_field( (string) $val );
 			} else {
 				$out[ $key ] = sanitize_text_field( (string) $val );
 			}
@@ -550,10 +555,15 @@ class SquidSec_Shield_Admin {
 		$max   = isset( $attrs['max'] ) ? ' max="' . esc_attr( $attrs['max'] ) . '"' : '';
 		$ph    = isset( $attrs['placeholder'] ) ? ' placeholder="' . esc_attr( $attrs['placeholder'] ) . '"' : '';
 		$auto  = isset( $attrs['autocomplete'] ) ? ' autocomplete="' . esc_attr( $attrs['autocomplete'] ) . '"' : '';
+		$rows  = isset( $attrs['rows'] ) ? (int) $attrs['rows'] : 4;
 		?>
 		<div class="sss-field">
 			<label class="sss-field-label" for="sss-<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></label>
-			<input type="<?php echo esc_attr( $type ); ?>" id="sss-<?php echo esc_attr( $key ); ?>" class="<?php echo esc_attr( $class ); ?>" name="sss[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( (string) $value ); ?>"<?php echo $min . $max . $ph . $auto; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> />
+			<?php if ( 'textarea' === $type ) : ?>
+				<textarea id="sss-<?php echo esc_attr( $key ); ?>" class="<?php echo esc_attr( $class ); ?>" name="sss[<?php echo esc_attr( $key ); ?>]" rows="<?php echo esc_attr( (string) $rows ); ?>"<?php echo $ph; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>><?php echo esc_textarea( (string) $value ); ?></textarea>
+			<?php else : ?>
+				<input type="<?php echo esc_attr( $type ); ?>" id="sss-<?php echo esc_attr( $key ); ?>" class="<?php echo esc_attr( $class ); ?>" name="sss[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( (string) $value ); ?>"<?php echo $min . $max . $ph . $auto; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> />
+			<?php endif; ?>
 			<p class="sss-help"><?php echo esc_html( $help ); ?></p>
 		</div>
 		<?php
@@ -927,6 +937,9 @@ class SquidSec_Shield_Admin {
 						'waf_block_rce',
 						'waf_block_lfi',
 						'rate_limit_enabled',
+						'bad_user_agents_enabled',
+						'probe_patterns_enabled',
+						'admin_ip_protection',
 					)
 				);
 				self::toggle(
@@ -975,7 +988,7 @@ class SquidSec_Shield_Admin {
 				self::toggle(
 					'rate_limit_enabled',
 					'Rate limiting',
-					'Limits how many requests an IP can make to sensitive WordPress endpoints (login, admin-ajax, REST, XML-RPC) in a short window. Excess traffic gets HTTP 429. Does not rate-limit normal front-end page views by default.',
+					'Limits how many requests an IP can make to sensitive WordPress endpoints (login, admin-ajax, REST, XML-RPC, and optionally wp-admin or general pages) in a short window. Excess traffic gets HTTP 429.',
 					$opts
 				);
 				self::field(
@@ -986,6 +999,103 @@ class SquidSec_Shield_Admin {
 					'text',
 					array( 'class' => 'large-text', 'placeholder' => '203.0.113.10, 198.51.100.0/24' )
 				);
+
+				// New: dedicated admin IP allowlist (used for wp-admin/wp-login/admin-ajax protection)
+				self::field(
+					'admin_ip_allowlist',
+					'Admin area IP allowlist',
+					'Comma-separated IPs or CIDRs allowed to access /wp-admin, /wp-login.php and admin-ajax. Everyone else gets 403 on those paths. Leave empty to disable the extra IP gate (still protected by normal WAF + login protection).',
+					implode( ', ', (array) $opts['admin_ip_allowlist'] ),
+					'text',
+					array( 'class' => 'large-text', 'placeholder' => '203.0.113.10, 198.51.100.0/24' )
+				);
+
+				// Block mode: soft (friendly page) or hard (plain 403)
+				?>
+				<p>
+					<label for="sss_block_mode"><strong>Block response mode</strong></label><br />
+					<select name="sss[block_mode]" id="sss_block_mode">
+						<option value="soft" <?php selected( $opts['block_mode'] ?? 'soft', 'soft' ); ?>>Soft — friendly SquidShield block page (default)</option>
+						<option value="hard" <?php selected( $opts['block_mode'] ?? 'soft', 'hard' ); ?>>Hard — plain 403 Forbidden (less information to scanners)</option>
+					</select>
+					<br /><span class="sss-help">Hard mode is useful when you want minimal HTML back to automated tools.</span>
+				</p>
+				<?php
+
+				// Bad UA + probe patterns toggles + custom UA list
+				self::toggle(
+					'bad_user_agents_enabled',
+					'Block obvious bad User-Agents',
+					'Immediately block requests that come with curl, ffuf, wpscan, sqlmap, nuclei, gobuster and similar tool UAs. The list below is editable.',
+					$opts
+				);
+
+				self::toggle(
+					'probe_patterns_enabled',
+					'Block common scanner probes',
+					'Catch .env, wp-config, ../ traversal, /etc/passwd, .git, xmlrpc.php, base64_decode, etc. in the URL or query string even before the full rule engine.',
+					$opts
+				);
+
+				self::field(
+					'bad_user_agents',
+					'Bad User-Agent list (one per line or partial match)',
+					'One entry per line. Partial match against the User-Agent header (case-insensitive).',
+					(string) $opts['bad_user_agents'],
+					'textarea',
+					array( 'rows' => 6, 'class' => 'large-text code' )
+				);
+				// Per-area rate limit numbers (after the new admin/general ones were added in code)
+				self::field(
+					'rate_limit_ajax',
+					'Admin-ajax rate limit',
+					'Max requests per window for admin-ajax.',
+					(int) $opts['rate_limit_ajax'],
+					'number'
+				);
+				self::field(
+					'rate_limit_rest',
+					'REST API rate limit',
+					'Max requests per window for REST endpoints.',
+					(int) $opts['rate_limit_rest'],
+					'number'
+				);
+				self::field(
+					'rate_limit_login',
+					'Login rate limit',
+					'Max login attempts per window (very low recommended).',
+					(int) $opts['rate_limit_login'],
+					'number'
+				);
+				self::field(
+					'rate_limit_xmlrpc',
+					'XML-RPC rate limit',
+					'Max requests per window for XML-RPC.',
+					(int) $opts['rate_limit_xmlrpc'],
+					'number'
+				);
+				self::field(
+					'rate_limit_admin',
+					'Admin area rate limit',
+					'Requests per window for /wp-admin and related admin endpoints.',
+					(int) $opts['rate_limit_admin'],
+					'number'
+				);
+				self::field(
+					'rate_limit_general',
+					'General front-end rate limit (0 = off)',
+					'Optional broad rate limit on normal pages. Most sites leave this at 0.',
+					(int) $opts['rate_limit_general'],
+					'number'
+				);
+				self::field(
+					'rate_limit_window',
+					'Rate limit window (seconds)',
+					'Time window used for all rate limit counters above.',
+					(int) $opts['rate_limit_window'],
+					'number'
+				);
+
 				self::field(
 					'ip_blocklist',
 					'IP blocklist',

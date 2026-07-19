@@ -91,8 +91,11 @@ class SquidSec_Shield_Rate_Limit {
 				return (int) SquidSec_Shield_Options::get( 'rate_limit_login', 10 );
 			case 'xmlrpc':
 				return (int) SquidSec_Shield_Options::get( 'rate_limit_xmlrpc', 20 );
+			case 'admin':
+				return (int) SquidSec_Shield_Options::get( 'rate_limit_admin', 60 );
 			default:
-				return 0; // No general front rate limit by default (perf).
+				// New: optional general front-end rate limit (0 = disabled by default)
+				return (int) SquidSec_Shield_Options::get( 'rate_limit_general', 0 );
 		}
 	}
 

@@ -104,6 +104,15 @@ class SquidSec_Shield_Options {
 			'scan_batch_size'         => 40,
 			// Custom rules sandbox.
 			'custom_rules_enabled'    => true,
+			// New hardening features (from server-level lessons).
+			'bad_user_agents_enabled' => true,
+			'bad_user_agents'         => "curl/\nwget/\nffuf\nwpscan\nlibredtail\npython-requests\npython-urllib\nGo-http-client\nhttpie\nheadlesschrome\nsqlmap\nnikto\nnmap\nmasscan\nzgrab\nsemrush\nahrefs\nbytespider\ngptbot\nclaudebot\npetalbot\ndotbot\nbingbot\nbaiduspider\nyandex\nmj12bot\nproximic\nfacebookexternalhit\nia_archiver\narchive.org_bot\nscanner\ndirbuster\ndirb\nwhatweb\nnessus\nopenvas\narachni\nw3af\nzaproxy\nburp\nnuclei\nhttpx\nhttprobe\ngobuster\ndirsearch\nferoxbuster\nkatana\nhakrawler",
+			'probe_patterns_enabled'  => true,
+			'admin_ip_protection'     => true,
+			'admin_ip_allowlist'      => array(),
+			'block_mode'              => 'soft', // soft = friendly block page, hard = plain 403
+			'rate_limit_admin'        => 60,
+			'rate_limit_general'      => 0,
 		);
 	}
 

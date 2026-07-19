@@ -102,6 +102,40 @@ class SquidSec_Shield_WAF {
 			}
 		}
 
+		// 1. Bad User-Agent blocking (configurable, stops curl/ffuf/wpscan etc.)
+		if ( SquidSec_Shield_Options::get( 'bad_user_agents_enabled' ) ) {
+			$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) ) : '';
+			if ( $ua && self::is_bad_ua( $ua ) ) {
+				// Still allow if in global allowlist
+				$allow = SquidSec_Shield_Options::get( 'ip_allowlist', array() );
+				if ( ! ( is_array( $allow ) && SquidSec_Shield_IP::in_list( $ip, $allow ) ) ) {
+					self::block_response( 'bad_ua', 'Bad user agent', '', $ip );
+					return;
+				}
+			}
+		}
+
+		// 2. Common scanner / probe patterns (broad traversal, .env, wp-config, etc.)
+		if ( SquidSec_Shield_Options::get( 'probe_patterns_enabled' ) ) {
+			if ( self::matches_probe_pattern( $uri . ' ' . $payload ) ) {
+				self::block_response( 'probe_pattern', 'Scanner probe pattern', '', $ip );
+				return;
+			}
+		}
+
+		// 3. Admin area IP protection (whitelist wp-admin / wp-login / admin-ajax)
+		if ( SquidSec_Shield_Options::get( 'admin_ip_protection' ) ) {
+			if ( self::is_admin_path( $uri ) ) {
+				$admin_ips = SquidSec_Shield_Options::get( 'admin_ip_allowlist', array() );
+				if ( is_array( $admin_ips ) && ! empty( $admin_ips ) ) {
+					if ( ! SquidSec_Shield_IP::in_list( $ip, $admin_ips ) && $ip !== '127.0.0.1' ) {
+						self::block_response( 'admin_ip', 'Admin area restricted', '', $ip );
+						return;
+					}
+				}
+			}
+		}
+
 		$match = SquidSec_Shield_Rules_Engine::evaluate( $uri, $payload, $context );
 		if ( ! $match ) {
 			return;
@@ -155,6 +189,82 @@ class SquidSec_Shield_WAF {
 	}
 
 	/**
+	 * Check against configurable bad user-agents.
+	 *
+	 * @param string $ua Lowercased UA.
+	 * @return bool
+	 */
+	protected static function is_bad_ua( $ua ) {
+		$list = SquidSec_Shield_Options::get( 'bad_user_agents', '' );
+		if ( ! is_string( $list ) || $list === '' ) {
+			return false;
+		}
+		$lines = preg_split( '/\r?\n/', $list );
+		foreach ( $lines as $entry ) {
+			$entry = trim( strtolower( $entry ) );
+			if ( $entry !== '' && false !== strpos( $ua, $entry ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Simple broad probe / traversal pattern matcher.
+	 *
+	 * @param string $blob URI + payload lowercased.
+	 * @return bool
+	 */
+	protected static function matches_probe_pattern( $blob ) {
+		$blob = strtolower( (string) $blob );
+
+		$patterns = array(
+			'.env',
+			'wp-config',
+			'../',
+			'%2e%2e',
+			'/etc/passwd',
+			'/etc/shadow',
+			'.git/',
+			'phpunit',
+			'eval-stdin',
+			'alfa.php',
+			'wso.php',
+			'xmlrpc.php',
+			'base64_decode',
+			'gzinflate',
+			'str_rot13',
+		);
+
+		foreach ( $patterns as $p ) {
+			if ( false !== strpos( $blob, $p ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Is this an admin area path we want to protect?
+	 *
+	 * @param string $uri Request URI.
+	 * @return bool
+	 */
+	protected static function is_admin_path( $uri ) {
+		$uri = strtolower( (string) $uri );
+		if ( false !== strpos( $uri, '/wp-admin' ) ) {
+			return true;
+		}
+		if ( false !== strpos( $uri, '/wp-login.php' ) ) {
+			return true;
+		}
+		if ( false !== strpos( $uri, '/admin-ajax.php' ) && false !== strpos( $uri, 'wp-admin' ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Send block response and exit.
 	 *
 	 * @param string $rule_id Rule.
@@ -167,15 +277,30 @@ class SquidSec_Shield_WAF {
 			return;
 		}
 
+		$mode   = SquidSec_Shield_Options::get( 'block_mode', 'soft' );
 		$status = 403;
+
 		if ( ! headers_sent() ) {
 			status_header( $status );
 			nocache_headers();
-			header( 'Content-Type: text/html; charset=utf-8' );
 			header( 'X-SquidSec-Shield: blocked' );
 			if ( $rule_id ) {
 				header( 'X-SquidSec-Rule: ' . preg_replace( '/[^a-zA-Z0-9_\-.]/', '', $rule_id ) );
 			}
+		}
+
+		if ( 'hard' === $mode ) {
+			// Plain 403, no fancy page (better for scanners and some CDNs).
+			if ( ! headers_sent() ) {
+				header( 'Content-Type: text/plain; charset=utf-8' );
+			}
+			echo 'Forbidden';
+			exit;
+		}
+
+		// Soft / friendly block page (default)
+		if ( ! headers_sent() ) {
+			header( 'Content-Type: text/html; charset=utf-8' );
 		}
 
 		$ref = $cve ? (string) $cve : (string) $rule_id;
