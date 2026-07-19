@@ -494,6 +494,9 @@ class SquidSec_Shield_Admin {
 			}
 			if ( is_int( $default ) ) {
 				$out[ $key ] = (int) $val;
+			} elseif ( 'bad_user_agents' === $key ) {
+				// Multiline UA list — preserve newlines.
+				$out[ $key ] = sanitize_textarea_field( (string) $val );
 			} else {
 				$out[ $key ] = sanitize_text_field( (string) $val );
 			}
@@ -552,10 +555,15 @@ class SquidSec_Shield_Admin {
 		$max   = isset( $attrs['max'] ) ? ' max="' . esc_attr( $attrs['max'] ) . '"' : '';
 		$ph    = isset( $attrs['placeholder'] ) ? ' placeholder="' . esc_attr( $attrs['placeholder'] ) . '"' : '';
 		$auto  = isset( $attrs['autocomplete'] ) ? ' autocomplete="' . esc_attr( $attrs['autocomplete'] ) . '"' : '';
+		$rows  = isset( $attrs['rows'] ) ? (int) $attrs['rows'] : 4;
 		?>
 		<div class="sss-field">
 			<label class="sss-field-label" for="sss-<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></label>
-			<input type="<?php echo esc_attr( $type ); ?>" id="sss-<?php echo esc_attr( $key ); ?>" class="<?php echo esc_attr( $class ); ?>" name="sss[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( (string) $value ); ?>"<?php echo $min . $max . $ph . $auto; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> />
+			<?php if ( 'textarea' === $type ) : ?>
+				<textarea id="sss-<?php echo esc_attr( $key ); ?>" class="<?php echo esc_attr( $class ); ?>" name="sss[<?php echo esc_attr( $key ); ?>]" rows="<?php echo esc_attr( (string) $rows ); ?>"<?php echo $ph; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>><?php echo esc_textarea( (string) $value ); ?></textarea>
+			<?php else : ?>
+				<input type="<?php echo esc_attr( $type ); ?>" id="sss-<?php echo esc_attr( $key ); ?>" class="<?php echo esc_attr( $class ); ?>" name="sss[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( (string) $value ); ?>"<?php echo $min . $max . $ph . $auto; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> />
+			<?php endif; ?>
 			<p class="sss-help"><?php echo esc_html( $help ); ?></p>
 		</div>
 		<?php
@@ -929,6 +937,9 @@ class SquidSec_Shield_Admin {
 						'waf_block_rce',
 						'waf_block_lfi',
 						'rate_limit_enabled',
+						'bad_user_agents_enabled',
+						'probe_patterns_enabled',
+						'admin_ip_protection',
 					)
 				);
 				self::toggle(
@@ -1003,7 +1014,7 @@ class SquidSec_Shield_Admin {
 				?>
 				<p>
 					<label for="sss_block_mode"><strong>Block response mode</strong></label><br />
-					<select name="block_mode" id="sss_block_mode">
+					<select name="sss[block_mode]" id="sss_block_mode">
 						<option value="soft" <?php selected( $opts['block_mode'] ?? 'soft', 'soft' ); ?>>Soft — friendly SquidShield block page (default)</option>
 						<option value="hard" <?php selected( $opts['block_mode'] ?? 'soft', 'hard' ); ?>>Hard — plain 403 Forbidden (less information to scanners)</option>
 					</select>

@@ -263,7 +263,6 @@ class SquidSec_Shield_WAF {
 		}
 		return false;
 	}
-}
 
 	/**
 	 * Send block response and exit.
